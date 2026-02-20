@@ -228,9 +228,18 @@ uv run pytest
 uv build
 ```
 
-## Publish
+## Contributing
+
+See `CONTRIBUTING.md` for PR workflow, checks, and contribution guidelines.
+
+## Release (Maintainers)
+
+Publishing is maintainer-only and handled by GitHub Actions on version tags.
+
+Typical flow:
 
 ```bash
-uv publish --dry-run
-uv publish
+# 1) bump version in pyproject.toml and update CHANGELOG.md
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
