@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Annotated, get_type_hints
+from typing import Annotated, Any, get_type_hints
 
 import pytest
 from msgspec import Meta
 
-from strictenv import BaseSettings, Field, MissingSettingError, ParseSettingError
+from strictenv import BaseSettings, Field, FieldInfo, MissingSettingError, ParseSettingError
 from strictenv._coerce import iter_annotated_metadata
 
 
@@ -15,6 +15,28 @@ def test_field_default_ellipsis_marks_required() -> None:
 
     with pytest.raises(MissingSettingError):
         RequiredSettings.load(env={})
+
+
+def test_required_field_after_field_default_ellipsis_is_allowed() -> None:
+    namespace: dict[str, Any] = {
+        "BaseSettings": BaseSettings,
+        "Field": Field,
+    }
+    exec(
+        "\n".join(
+            [
+                "class OrderedRequiredSettings(BaseSettings):",
+                "    token: str = Field(...)",
+                "    retries: int",
+            ]
+        ),
+        namespace,
+    )
+    settings_cls = namespace["OrderedRequiredSettings"]
+
+    loaded = settings_cls.load(env={"TOKEN": "abc", "RETRIES": "3"})
+    assert loaded.token == "abc"
+    assert loaded.retries == 3
 
 
 def test_field_alias_from_default_value_is_respected() -> None:
@@ -60,8 +82,8 @@ def test_length_validations_apply_to_set_values_and_description_is_stored() -> N
     with pytest.raises(ParseSettingError):
         ScopeSettings.load(env={"SCOPES": "[]"})
 
-    default_meta = ScopeSettings.__struct_defaults__[0]
-    assert isinstance(default_meta, Field)
+    default_meta = getattr(ScopeSettings, "__struct_defaults__")[0]
+    assert isinstance(default_meta, FieldInfo)
     assert default_meta.description == "Granted scopes"
 
 

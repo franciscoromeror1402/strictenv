@@ -18,6 +18,7 @@ class RootStructTransformSettings(BaseSettings):
     count: int
     name: str
 
+    @classmethod
     @transform_struct
     def normalize(cls, instance: Any) -> None:
         assert cls is RootStructTransformSettings

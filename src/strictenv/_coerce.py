@@ -13,10 +13,10 @@ from re import fullmatch
 from types import UnionType
 from typing import Annotated, Any, Union, get_args, get_origin, get_type_hints
 
-from msgspec import Meta, Struct, json
+from msgspec import NODEFAULT, Meta, Struct, json
 
 from .errors import ParseSettingError
-from .fields import Field
+from .fields import FieldInfo
 
 
 def iter_annotated_metadata(annotation: Any) -> tuple[Any, list[Any]]:
@@ -96,12 +96,15 @@ def _get_struct_defaults_map(struct_type: type[Any]) -> dict[str, Any]:
     if not fields:
         return {}
 
-    required_count = len(fields) - len(defaults)
+    default_start = len(fields) - len(defaults)
     by_name: dict[str, Any] = {}
     for field_index, field_name in enumerate(fields):
-        if field_index < required_count:
+        if field_index < default_start:
             continue
-        by_name[field_name] = defaults[field_index - required_count]
+        default_value = defaults[field_index - default_start]
+        if default_value is NODEFAULT:
+            continue
+        by_name[field_name] = default_value
     return by_name
 
 
@@ -220,20 +223,20 @@ def _inject_field_descriptions_into_meta(
     return updated
 
 
-def _field_from_annotation(annotation: Any) -> Field | None:
+def _field_from_annotation(annotation: Any) -> FieldInfo | None:
     _, metadata = iter_annotated_metadata(annotation)
     for meta in metadata:
-        if isinstance(meta, Field):
+        if isinstance(meta, FieldInfo):
             return meta
     return None
 
 
-def _merge_field_info(base: Field | None, override: Field | None) -> Field | None:
+def _merge_field_info(base: FieldInfo | None, override: FieldInfo | None) -> FieldInfo | None:
     if base is None:
         return override
     if override is None:
         return base
-    return Field(
+    return FieldInfo(
         override.default,
         alias=override.alias if override.alias is not None else base.alias,
         description=(
@@ -258,7 +261,7 @@ def _merge_field_info(base: Field | None, override: Field | None) -> Field | Non
     )
 
 
-def field_info(annotation: Any, *, default: Any = None) -> Field | None:
+def field_info(annotation: Any, *, default: Any = None) -> FieldInfo | None:
     """
     Resolve effective `Field` metadata from annotation metadata and default value.
 
@@ -270,7 +273,7 @@ def field_info(annotation: Any, *, default: Any = None) -> Field | None:
         The effective field metadata, or `None` when no metadata exists.
     """
     annotated = _field_from_annotation(annotation)
-    from_default = default if isinstance(default, Field) else None
+    from_default = default if isinstance(default, FieldInfo) else None
     return _merge_field_info(annotated, from_default)
 
 
@@ -434,7 +437,7 @@ def validate_constraints(
     target_type: Any,
     *,
     field_name: str,
-    field: Field | None = None,
+    field: FieldInfo | None = None,
     raw_value: str | None = None,
 ) -> Any:
     """
@@ -525,7 +528,7 @@ def coerce_value(
     target_type: Any,
     *,
     field_name: str,
-    field: Field | None = None,
+    field: FieldInfo | None = None,
 ) -> Any:
     """
     Convert a raw environment string into the declared target type.

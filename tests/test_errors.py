@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from strictenv import (
@@ -51,7 +53,7 @@ def test_env_file_not_found_error_contains_path() -> None:
     assert err.env_file == "does-not-exist.env"
 
 
-def test_env_file_format_error_contains_line_context(tmp_path) -> None:
+def test_env_file_format_error_contains_line_context(tmp_path: Path) -> None:
     env_file = tmp_path / ".env"
     env_file.write_text("OK=value\nINVALID_LINE\n", encoding="utf-8")
 
@@ -68,7 +70,7 @@ def test_env_file_format_error_contains_line_context(tmp_path) -> None:
     assert err.line == "INVALID_LINE"
 
 
-def test_env_file_read_error_for_unreadable_path(tmp_path) -> None:
+def test_env_file_read_error_for_unreadable_path(tmp_path: Path) -> None:
     env_dir = tmp_path / "envdir"
     env_dir.mkdir()
 
@@ -95,7 +97,7 @@ def test_non_strict_env_file_ignores_missing_file() -> None:
     assert loaded.value == "default"
 
 
-def test_non_strict_env_file_skips_invalid_lines_and_keeps_last_duplicate(tmp_path) -> None:
+def test_non_strict_env_file_skips_invalid_lines_and_keeps_last_duplicate(tmp_path: Path) -> None:
     env_file = tmp_path / ".env"
     env_file.write_text(
         "\n".join(

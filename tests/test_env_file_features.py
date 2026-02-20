@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from strictenv import BaseSettings, EnvFileFormatError
@@ -16,7 +18,7 @@ class EnvFeatureSettings(BaseSettings):
     escaped: str
 
 
-def test_env_file_parses_export_comments_quotes_multiline_and_expansion(tmp_path) -> None:
+def test_env_file_parses_export_comments_quotes_multiline_and_expansion(tmp_path: Path) -> None:
     env_file = tmp_path / ".env"
     env_file.write_text(
         "\n".join(
@@ -49,7 +51,7 @@ def test_env_file_parses_export_comments_quotes_multiline_and_expansion(tmp_path
     assert loaded.escaped == 'line\nnext\tindent"quote"'
 
 
-def test_strict_env_file_rejects_undefined_variable_reference(tmp_path) -> None:
+def test_strict_env_file_rejects_undefined_variable_reference(tmp_path: Path) -> None:
     env_file = tmp_path / ".env"
     env_file.write_text("URL=${STRICTENV_MISSING_VAR_9A8B7C}\n", encoding="utf-8")
 
@@ -65,7 +67,7 @@ def test_strict_env_file_rejects_undefined_variable_reference(tmp_path) -> None:
     assert "undefined variable reference" in err.reason
 
 
-def test_strict_env_file_rejects_cyclic_variable_reference(tmp_path) -> None:
+def test_strict_env_file_rejects_cyclic_variable_reference(tmp_path: Path) -> None:
     env_file = tmp_path / ".env"
     env_file.write_text("A=${B}\nB=${A}\n", encoding="utf-8")
 
@@ -81,7 +83,7 @@ def test_strict_env_file_rejects_cyclic_variable_reference(tmp_path) -> None:
     assert "cyclic variable reference" in err.reason
 
 
-def test_non_strict_env_file_uses_empty_string_for_unknown_variable(tmp_path) -> None:
+def test_non_strict_env_file_uses_empty_string_for_unknown_variable(tmp_path: Path) -> None:
     env_file = tmp_path / ".env"
     env_file.write_text("URL=prefix-${STRICTENV_MISSING_VAR_9A8B7C}\n", encoding="utf-8")
 

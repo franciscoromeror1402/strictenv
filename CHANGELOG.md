@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] - 2026-02-20
+
+### Changed
+- `Field(...)` now follows a pydantic-like typed API by exposing `Field` as a function and keeping metadata in `FieldInfo` internally.
+- `TransformStruct` now defaults subclasses to keyword-only construction, allowing required fields to be declared after `= Field(...)` without class-definition errors.
+- Default detection now handles `msgspec.NODEFAULT` placeholders correctly when resolving required vs optional fields.
+
+### Fixed
+- Full `mypy` pass for all test files (`uv run mypy tests`) by adding missing fixture annotations and removing typing edge cases.
+- Added regression coverage for field-ordering with `Field(...)` required markers.
+
 ## [0.1.1] - 2026-02-20
 
 ### Added

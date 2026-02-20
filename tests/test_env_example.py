@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated
 
 import pytest
@@ -36,7 +37,7 @@ class _LimitedExampleNestedSettings(BaseSettings):
     }
 
 
-def test_write_env_example_with_descriptions_and_alias(tmp_path) -> None:
+def test_write_env_example_with_descriptions_and_alias(tmp_path: Path) -> None:
     env_file = tmp_path / "configs" / ".env.example"
 
     class ExampleSettings(BaseSettings):
@@ -64,7 +65,7 @@ def test_write_env_example_with_descriptions_and_alias(tmp_path) -> None:
     assert content == expected
 
 
-def test_write_env_example_for_nested_struct_uses_delimiter(tmp_path) -> None:
+def test_write_env_example_for_nested_struct_uses_delimiter(tmp_path: Path) -> None:
     env_file = tmp_path / ".env.example"
     _ExampleNestedSettings.write_env_example(str(env_file))
     content = env_file.read_text(encoding="utf-8")
@@ -82,7 +83,7 @@ def test_write_env_example_for_nested_struct_uses_delimiter(tmp_path) -> None:
     assert content == expected
 
 
-def test_write_env_example_raises_when_nested_depth_limit_is_exceeded(tmp_path) -> None:
+def test_write_env_example_raises_when_nested_depth_limit_is_exceeded(tmp_path: Path) -> None:
     env_file = tmp_path / ".env.example"
 
     with pytest.raises(NestedStructDepthError):

@@ -10,7 +10,7 @@ from .errors import (
     SettingsError,
     TransformSettingError,
 )
-from .fields import Field
+from .fields import Field, FieldInfo
 from .structs import TransformStruct
 from .transforms import transform, transform_struct
 
@@ -18,6 +18,7 @@ __all__ = [
     "BaseSettings",
     "TransformStruct",
     "Field",
+    "FieldInfo",
     "transform",
     "transform_struct",
     "SettingsError",

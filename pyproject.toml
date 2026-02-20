@@ -1,6 +1,6 @@
 [project]
 name = "strictenv"
-version = "0.1.1"
+version = "0.1.2"
 description = "Strictly typed environment variable parsing and validation with msgspec."
 readme = "README.md"
 license = "MIT"

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from typing import Any
+from types import EllipsisType
+from typing import Any, TypeVar, overload
+
+_T = TypeVar("_T")
 
 
-class Field:
+class FieldInfo:
     """
     Settings field metadata for aliases, defaults, and lightweight validation rules.
 
@@ -90,3 +93,64 @@ class Field:
     def is_required(self) -> bool:
         """Return whether this field has no default value (`...`)."""
         return self.default is ...
+
+
+@overload
+def Field(
+    default: EllipsisType = ...,
+    *,
+    alias: str | None = None,
+    description: str | None = None,
+    gt: int | float | None = None,
+    ge: int | float | None = None,
+    lt: int | float | None = None,
+    le: int | float | None = None,
+    min_length: int | None = None,
+    max_length: int | None = None,
+) -> Any: ...
+
+
+@overload
+def Field(
+    default: _T,
+    *,
+    alias: str | None = None,
+    description: str | None = None,
+    gt: int | float | None = None,
+    ge: int | float | None = None,
+    lt: int | float | None = None,
+    le: int | float | None = None,
+    min_length: int | None = None,
+    max_length: int | None = None,
+) -> _T: ...
+
+
+def Field(
+    default: Any = ...,
+    *,
+    alias: str | None = None,
+    description: str | None = None,
+    gt: int | float | None = None,
+    ge: int | float | None = None,
+    lt: int | float | None = None,
+    le: int | float | None = None,
+    min_length: int | None = None,
+    max_length: int | None = None,
+) -> Any:
+    """
+    Create field metadata for `strictenv`.
+
+    This function mirrors the ergonomic API used by libraries like Pydantic,
+    while storing metadata in `FieldInfo`.
+    """
+    return FieldInfo(
+        default,
+        alias=alias,
+        description=description,
+        gt=gt,
+        ge=ge,
+        lt=lt,
+        le=le,
+        min_length=min_length,
+        max_length=max_length,
+    )

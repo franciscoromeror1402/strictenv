@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from types import UnionType
 from typing import Any, ClassVar, TypeVar, Union, get_args, get_origin
 
-from msgspec import Struct
+from msgspec import NODEFAULT, Struct, StructMeta
 
 from ._coerce import (
     extract_struct_type,
@@ -47,7 +47,19 @@ StructTransformRegistry = list[_RegisteredStructTransform]
 TTransformStruct = TypeVar("TTransformStruct", bound="TransformStruct")
 
 
-class TransformStruct(Struct):
+class _TransformStructMeta(StructMeta):
+    def __new__(
+        mcls,
+        name: str,
+        bases: tuple[type[Any], ...],
+        ns: dict[str, Any],
+        **kwargs: Any,
+    ) -> Any:
+        kwargs.setdefault("kw_only", True)
+        return super().__new__(mcls, name, bases, ns, **kwargs)
+
+
+class TransformStruct(Struct, metaclass=_TransformStructMeta):
     """
     `msgspec.Struct` subclass with field and struct transforms.
 
@@ -190,15 +202,18 @@ class TransformStruct(Struct):
     def _get_own_struct_default(cls, field_name: str) -> tuple[bool, Any]:
         fields = cls.__struct_fields__
         defaults = cls.__struct_defaults__
-        required_count = len(fields) - len(defaults)
+        default_start = len(fields) - len(defaults)
         try:
             field_index = fields.index(field_name)
         except ValueError:
             return False, None
-        if field_index < required_count:
+        if field_index < default_start:
             return False, None
-        default_index = field_index - required_count
-        return True, defaults[default_index]
+        default_index = field_index - default_start
+        default_value = defaults[default_index]
+        if default_value is NODEFAULT:
+            return False, None
+        return True, default_value
 
     @classmethod
     def _resolve_positional_signature(

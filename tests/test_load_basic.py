@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from strictenv import BaseSettings
 
 
@@ -14,7 +16,7 @@ def test_load_required_and_defaults() -> None:
     assert loaded.retries == 3
 
 
-def test_source_precedence(tmp_path) -> None:
+def test_source_precedence(tmp_path: Path) -> None:
     env_file = tmp_path / ".env"
     env_file.write_text("DEBUG=false\nRETRIES=11\n", encoding="utf-8")
 

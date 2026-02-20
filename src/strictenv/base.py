@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, ClassVar, Mapping, Self, TypedDict, cast, get_origin
 
-from msgspec import Struct, convert, json
+from msgspec import NODEFAULT, Struct, convert, json
 
 from ._coerce import (
     coerce_value,
@@ -22,7 +22,7 @@ from .errors import (
     ParseSettingError,
     TransformSettingError,
 )
-from .fields import Field
+from .fields import FieldInfo
 from .structs import TransformStruct
 
 
@@ -171,7 +171,7 @@ class BaseSettings(TransformStruct):
             if found_value:
                 continue
 
-            if has_default and isinstance(raw_default, Field):
+            if has_default and isinstance(raw_default, FieldInfo):
                 if not raw_default.is_required():
                     data[field_name] = raw_default.default
                     continue
@@ -313,15 +313,18 @@ class BaseSettings(TransformStruct):
         """
         fields = struct_type.__struct_fields__
         defaults = struct_type.__struct_defaults__
-        required_count = len(fields) - len(defaults)
+        default_start = len(fields) - len(defaults)
         try:
             field_index = fields.index(field_name)
         except ValueError:
             return False, None
-        if field_index < required_count:
+        if field_index < default_start:
             return False, None
-        default_index = field_index - required_count
-        return True, defaults[default_index]
+        default_index = field_index - default_start
+        default_value = defaults[default_index]
+        if default_value is NODEFAULT:
+            return False, None
+        return True, default_value
 
     @classmethod
     def _field_has_default(cls, struct_type: type[Struct], field_name: str) -> bool:
@@ -338,7 +341,7 @@ class BaseSettings(TransformStruct):
         has_default, default_value = cls._get_struct_default(struct_type, field_name)
         if not has_default:
             return False
-        if isinstance(default_value, Field):
+        if isinstance(default_value, FieldInfo):
             return not default_value.is_required()
         return True
 
@@ -373,7 +376,7 @@ class BaseSettings(TransformStruct):
         field_name: str,
         field_type: Any,
         raw_value: Any,
-        info: Field | None,
+        info: FieldInfo | None,
         field_path: str,
         depth: int,
         max_nested_struct_depth: int | None,
@@ -674,7 +677,11 @@ class BaseSettings(TransformStruct):
             nested_path = f"{field_path}.{field_name}"
 
             if field_name not in raw:
-                if has_default and isinstance(raw_default, Field) and not raw_default.is_required():
+                if (
+                    has_default
+                    and isinstance(raw_default, FieldInfo)
+                    and not raw_default.is_required()
+                ):
                     parsed[field_name] = cls._coerce_field_value(
                         struct_type=struct_type,
                         field_name=field_name,
