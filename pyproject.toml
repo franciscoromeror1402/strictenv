@@ -1,0 +1,41 @@
+[project]
+name = "strictenv"
+version = "0.1.0"
+description = "Strictly typed environment variable parsing and validation with msgspec."
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = 'Francisco Romero Ruiz', email = "francisco.romeror1402@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "msgspec>=0.20.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.18,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.1",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.15.1",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src/strictenv"]
+
+[tool.pytest.ini_options]
+addopts = "-q --cov=strictenv --cov-report=term-missing"
+testpaths = ["tests"]
