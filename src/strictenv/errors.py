@@ -164,7 +164,7 @@ class TransformSettingError(SettingsError):
 
         Args:
             field_name: Field path associated with the transform.
-            mode: Transform mode (`before` or `after`).
+            mode: Transform mode (`before`, `after`, or `struct_after`).
             transform_name: Name of the transform callable.
             target_type: Declared target field type.
             raw_value: Optional raw value used as input.

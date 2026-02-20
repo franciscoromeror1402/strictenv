@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, ClassVar, Mapping, Self, TypedDict, get_origin
+from typing import Any, ClassVar, Mapping, Self, TypedDict, cast, get_origin
 
 from msgspec import Struct, convert, json
 
@@ -190,7 +190,8 @@ class BaseSettings(TransformStruct):
             cls,
             max_nested_struct_depth=max_nested_struct_depth,
         )
-        return convert(data, type=cls)
+        loaded = convert(data, type=cls)
+        return cls._apply_struct_transforms(loaded, field_path="")
 
     @classmethod
     def _get_declared_fields(cls, struct_type: type[Struct]) -> dict[str, Any]:
@@ -697,10 +698,16 @@ class BaseSettings(TransformStruct):
             )
 
         try:
-            return convert(parsed, type=struct_type)
+            converted = convert(parsed, type=struct_type)
         except Exception as exc:
             raise ParseSettingError(
                 field_name=field_path,
                 target_type=struct_type,
                 raw_value=repr(raw),
             ) from exc
+        if isinstance(struct_type, type) and issubclass(struct_type, TransformStruct):
+            converted = struct_type._apply_struct_transforms(
+                cast(TransformStruct, converted),
+                field_path=field_path,
+            )
+        return converted

@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1] - 2026-02-20
+
+### Added
+- `@transform_struct` decorator for post-validation struct-level transforms on any `TransformStruct` (including `BaseSettings` and nested structs).
+- Support for struct-level hooks with signatures `(instance)` or `(cls, instance)`.
+
+### Changed
+- Struct transform pipeline now supports final post-parse mutation plus full revalidation.
+- After `transform_struct`, values are revalidated for runtime type compatibility and `Field(...)` constraints.
+- `transform_struct` hooks must mutate in place and return `None`; incompatible type changes raise `TransformSettingError` in `struct_after` mode.
+
 ## [0.1.0] - 2026-02-20
 
 ### Added
@@ -14,4 +25,3 @@ All notable changes to this project will be documented in this file.
 - `TransformStruct` and `@transform` (`before`/`after`) for field transforms.
 - `write_env_example(...)` generation with field descriptions as comments.
 - CI workflow and automated publish workflow using Trusted Publishing.
-

@@ -8,12 +8,18 @@ TransformMode = Literal["before", "after"]
 
 _TRANSFORM_COUNTER = count()
 _TRANSFORM_META_ATTR = "__strictenv_transform_meta__"
+_STRUCT_TRANSFORM_META_ATTR = "__strictenv_struct_transform_meta__"
 
 
 @dataclass(frozen=True)
 class TransformMeta:
     field_name: str
     mode: TransformMode
+    order: int
+
+
+@dataclass(frozen=True)
+class StructTransformMeta:
     order: int
 
 
@@ -49,6 +55,21 @@ def transform(field_name: str, *, mode: TransformMode) -> Callable[[Any], Any]:
     return decorator
 
 
+def transform_struct(func: Any) -> Any:
+    """
+    Register a post-validation struct transform.
+
+    The decorated callable runs after the struct instance is built and after
+    field-level transforms are applied.
+    """
+    if not callable(func):
+        raise TypeError("transform_struct decorator can only be applied to callables")
+
+    meta = StructTransformMeta(order=next(_TRANSFORM_COUNTER))
+    setattr(func, _STRUCT_TRANSFORM_META_ATTR, meta)
+    return func
+
+
 def get_transform_meta(candidate: Any) -> TransformMeta | None:
     """Return transform metadata from a callable or descriptor if present."""
     meta = getattr(candidate, _TRANSFORM_META_ATTR, None)
@@ -57,5 +78,17 @@ def get_transform_meta(candidate: Any) -> TransformMeta | None:
     func = getattr(candidate, "__func__", None)
     meta = getattr(func, _TRANSFORM_META_ATTR, None)
     if isinstance(meta, TransformMeta):
+        return meta
+    return None
+
+
+def get_struct_transform_meta(candidate: Any) -> StructTransformMeta | None:
+    """Return struct-transform metadata from a callable or descriptor if present."""
+    meta = getattr(candidate, _STRUCT_TRANSFORM_META_ATTR, None)
+    if isinstance(meta, StructTransformMeta):
+        return meta
+    func = getattr(candidate, "__func__", None)
+    meta = getattr(func, _STRUCT_TRANSFORM_META_ATTR, None)
+    if isinstance(meta, StructTransformMeta):
         return meta
     return None

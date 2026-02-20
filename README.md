@@ -103,7 +103,7 @@ from `TransformStruct` (including `BaseSettings`).
 - `after` receives already parsed value and must keep a compatible runtime type.
 
 ```python
-from strictenv import BaseSettings, TransformStruct, transform
+from strictenv import BaseSettings, TransformStruct, transform, transform_struct
 
 class DatabaseConfig(TransformStruct):
     host: str
@@ -126,6 +126,33 @@ Rules:
 - Multiple transforms run in definition order.
 - Nested transforms apply only when nested type inherits `TransformStruct`.
 - Nested settings can still use plain `msgspec.Struct`; use `TransformStruct` only when you need `@transform`.
+
+## `@transform_struct(...)`
+
+Use `@transform_struct` when you need to mutate the already-built struct instance.
+
+```python
+from strictenv import BaseSettings, Field, transform_struct
+
+class AppSettings(BaseSettings):
+    token: str = Field(..., min_length=4)
+
+    @transform_struct
+    def normalize(instance: AppSettings) -> None:
+        instance.token = instance.token.strip().lower()
+```
+
+Execution order:
+- `before` field transforms
+- parse/coerce
+- `after` field transforms
+- `transform_struct`
+- final revalidation (runtime type compatibility + field constraints)
+
+Notes:
+- `transform_struct` applies to any `TransformStruct` (root and nested).
+- The hook must mutate in place and return `None`.
+- Changing an attribute to an incompatible type raises `TransformSettingError`.
 
 ## Generate `.env.example`
 
